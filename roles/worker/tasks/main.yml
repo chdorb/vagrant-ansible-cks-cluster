@@ -1,0 +1,26 @@
+- name: worker | check kubelet conf file
+  stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: worker_join
+  tags: join
+
+- name: worker | wait for master
+  wait_for:
+    path: /etc/cluster_ready
+    state: present
+  delegate_to: cks-master
+  when: not worker_join.stat.exists
+  tags: join
+
+- name: worker | register join command on master
+  shell: |
+    kubeadm token create --print-join-command --ttl 0
+  delegate_to: cks-master
+  register: join_command
+  when: not worker_join.stat.exists
+  tags: join
+
+- name: worker | join cluster
+  shell: "{{ join_command.stdout }}"
+  when: not worker_join.stat.exists
+  tags: join

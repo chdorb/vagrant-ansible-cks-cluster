@@ -1,0 +1,59 @@
+# For idempotency, check a file to see if kubeadm already init
+- name: "init k8s | check if needed"
+  stat:
+    path: /etc/kubernetes/scheduler.conf
+  register: kubeadm_file
+  tags: kubeadm
+  
+- name: "init k8s | kubeadm init"
+  shell: 
+    kubeadm init --kubernetes-version={{ KUBE_VERSION }} --ignore-preflight-errors=NumCPU --skip-token-print
+  when: not kubeadm_file.stat.exists
+  tags: kubeadm
+  
+- name: "init k8s | user .kube directory"
+  file:
+    path: ~/.kube
+    state: directory
+  tags: kubeadm
+  
+- name: "init k8s | copy kubeconfig"
+  copy: 
+    src: /etc/kubernetes/admin.conf
+    dest: ~/.kube/config # TODO check permissions
+    remote_src: yes
+  tags: kubeadm
+  
+- name: "weave workaround | kubectl version"
+  shell: |
+    kubectl version | base64 | tr -d '\n'
+  register: kubectl_version
+  changed_when: false
+  tags: weave
+  
+- name: "weave workaround | get yaml"
+  get_url:
+    url: "https://cloud.weave.works/k8s/net?k8s-version={{ kubectl_version.stdout }}"
+    dest: /tmp/weave.yaml
+  tags: weave
+
+- name: "weave | apply weave"
+  kubernetes.core.k8s:
+    state: present
+    src: /tmp/weave.yaml
+  tags: weave
+
+- name: "etcdctl"
+  unarchive:
+    src: "https://github.com/etcd-io/etcd/releases/download/{{ ETCDCTL_VERSION }}/etcd-{{ ETCDCTL_VERSION }}-linux-amd64.tar.gz"
+    dest: /usr/bin/
+    remote_src: yes
+    extra_opts: 
+    - --strip-components=1
+    - etcd-{{ ETCDCTL_VERSION }}-linux-amd64/etcdctl
+  tags: etcd
+
+- name: "cluster ready" # TODO: maybe use wait
+  file:
+    path: /etc/cluster_ready
+    state: touch

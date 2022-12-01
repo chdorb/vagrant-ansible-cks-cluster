@@ -1,0 +1,6 @@
+---
+- hosts: cks-master
+  become: yes
+  roles:
+    - base
+    - master

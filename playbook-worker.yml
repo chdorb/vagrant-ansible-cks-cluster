@@ -1,0 +1,6 @@
+---
+- hosts: cks-worker
+  become: yes
+  roles:
+    - base
+    - worker

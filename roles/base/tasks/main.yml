@@ -1,0 +1,248 @@
+- name: "setup ansible | apt packages"
+  apt:
+    name:
+    - python3-apt
+    - python3-pip
+    update_cache: yes
+  tags: packages, apt
+
+# For idempotency
+- name: "setup ansible | check if python3-kubernetes is installed"
+  shell: |
+    pip3 list --format legacy | grep kubernetes
+  changed_when: false
+  ignore_errors: yes
+  register: python_kubernetes_installed
+  tags: packages, pip
+
+- name: "setup ansible | pip packages"
+  # python3-kubernetes v2.0.0 in ubuntu 18.04 outdated use pip instead
+  pip:
+    name: kubernetes
+    extra_args: "--user"
+  when: python_kubernetes_installed.rc != 0
+  tags: packages, pip
+
+- name: "setup terminal | packages"
+  apt:
+    name:
+    - bash-completion
+    - binutils
+    update_cache: yes
+  tags: packages, apt
+
+- name: "setup terminal | vim configuration"
+  blockinfile:
+    marker: '" {mark} ANSIBLE MANAGED BLOCK'
+    path: ~/.vimrc
+    create: yes
+    block: |
+      colorscheme ron
+      set tabstop=2
+      set shiftwidth=2
+      set expandtab
+
+- name: "setup terminal | bash configuration"
+  blockinfile:
+    path: ~/.bashrc
+    block: |
+      source <(kubectl completion bash)
+      alias k=kubectl
+      alias c=clear
+      complete -F __start_kubectl k
+  tags: bash
+
+- name: "setup terminal | bash configuration"
+  replace:
+    path: ~/.bashrc
+    regexp: '^#(force_color_prompt=yes)$'
+    replace: '\1'
+  tags: bash
+
+- name: "disable swap | disable swap"
+  shell: swapoff -a
+  when: ansible_swaptotal_mb > 0
+  tags: swap
+
+- name: "disable swap | comment swap partition in fstab"
+  ansible.posix.mount:
+    path: none
+    fstype: swap
+    state: absent
+  tags: swap
+
+- name: "packages | kubernetes repo key"
+  ansible.builtin.apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+  tags: packages, apt
+
+- name: "packages | kubernetes repo"
+  ansible.builtin.apt_repository:
+    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    filename: kubernetes
+    update_cache: yes
+    state: present
+  tags: packages, apt
+
+- name: "packages | kubernetes packages"
+  apt:
+    name:
+    - docker.io
+    - containerd
+    - "kubelet={{ KUBE_VERSION }}-00" 
+    - "kubeadm={{ KUBE_VERSION }}-00" 
+    - "kubectl={{ KUBE_VERSION }}-00" 
+    - kubernetes-cni
+    state: present
+    update_cache: yes
+  tags: packages, apt
+  
+- name: "packages | hold kubernetes packages"
+  dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  with_items:
+  - kubelet
+  - kubectl
+  - kubeadm
+  - kubernetes-cni
+  tags: packages, apt
+  
+- name: "containerd | kernel modules conf"
+  lineinfile:
+    path: /etc/modules-load.d/containerd.conf
+    line: "{{ item }}"
+    create: yes
+    state: present
+  with_items:
+  - overlay
+  - br_netfilter
+  notify: restart containerd
+  tags: containerd
+  
+- name: "containerd | kernel modules load"
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - overlay
+  - br_netfilter
+  notify: restart containerd
+  tags: containerd
+  
+- name: "containerd | sysctl configuration"
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: '1'
+    sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+    sysctl_set: yes
+    state: present
+    reload: yes
+  with_items:
+  - net.bridge.bridge-nf-call-iptables
+  - net.ipv4.ip_forward
+  - net.bridge.bridge-nf-call-ip6tables
+  notify: restart containerd
+  tags: containerd
+
+- name: "containerd | containerd configuration path"
+  file:
+    path: /etc/containerd
+    state: directory
+  notify: restart containerd
+  tags: containerd
+  
+- name: "containerd configuration | containerd config"
+  # TODO use file or template
+  blockinfile:
+    path: /etc/containerd/config.toml
+    create: yes
+    block: |
+      disabled_plugins = []
+      imports = []
+      oom_score = 0
+      plugin_dir = ""
+      required_plugins = []
+      root = "/var/lib/containerd"
+      state = "/run/containerd"
+      version = 2
+      
+      [plugins]
+      
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+            base_runtime_spec = ""
+            container_annotations = []
+            pod_annotations = []
+            privileged_without_host_devices = false
+            runtime_engine = ""
+            runtime_root = ""
+            runtime_type = "io.containerd.runc.v2"
+      
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+              BinaryName = ""
+              CriuImagePath = ""
+              CriuPath = ""
+              CriuWorkPath = ""
+              IoGid = 0
+              IoUid = 0
+              NoNewKeyring = false
+              NoPivotRoot = false
+              Root = ""
+              ShimCgroup = ""
+              SystemdCgroup = true
+    state: present
+  notify: restart containerd
+  tags: containerd
+  
+- name: "containerd configuration | crictl containerd runtime"
+  lineinfile:
+    path: /etc/crictl.yaml
+    create: yes
+    line: "runtime-endpoint: unix:///run/containerd/containerd.sock"
+    state: present
+  notify: restart containerd
+  
+- name: "containerd configuration | kubelet containerd runtime"
+  lineinfile:
+    path: /etc/default/kubelet
+    create: yes
+    line: KUBELET_EXTRA_ARGS="--container-runtime remote --container-runtime-endpoint unix:///run/containerd/containerd.sock"
+    state: present
+  notify: restart containerd
+  
+- name: "podman | projectatomic ppa"
+  ansible.builtin.apt_repository:
+    repo: ppa:projectatomic/ppa
+  
+- name: "podman | podman packages"
+  apt:
+    name:
+    - podman
+    - containers-common
+    state: present
+    update_cache: yes
+  
+- name: "podman | podman registries"
+  # TODO use file or template
+  blockinfile:
+    path: /etc/containers/registries.conf
+    create: yes
+    block: |
+      [registries.search]
+      registries = ['docker.io']
+  
+  # TODO: user handlers
+- name: "services | kubelet enabled and started"
+  ansible.builtin.systemd:
+    name: kubelet
+    state: started
+    daemon_reload: yes
+    enabled: yes
+  
+- name: "services | containerd restarted and enabled"
+  ansible.builtin.systemd:
+    name: containerd
+    daemon_reload: yes
+    enabled: yes
