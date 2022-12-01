@@ -1,3 +1,26 @@
+- name: "setup ansible | apt packages"
+  apt:
+    name:
+    - python3-pip
+    update_cache: yes
+  tags: packages, apt
+
+## For idempotency
+- name: "setup ansible | check if python3-kubernetes is installed"
+  shell: |
+    pip3 list --format columns | grep kubernetes
+  changed_when: false
+  ignore_errors: yes
+  register: python_kubernetes_installed
+  tags: packages, pip
+
+- name: "setup ansible | pip packages"
+  # python3-kubernetes v7.0.0 in ubuntu 20.04 outdated use pip instead
+  pip:
+    name: kubernetes
+    extra_args: "--user"
+  when: python_kubernetes_installed.rc != 0
+  tags: packages, pip
 # For idempotency, check a file to see if kubeadm already init
 - name: "init k8s | check if needed"
   stat:
@@ -24,24 +47,18 @@
     remote_src: yes
   tags: kubeadm
   
-- name: "weave workaround | kubectl version"
-  shell: |
-    kubectl version | base64 | tr -d '\n'
-  register: kubectl_version
-  changed_when: false
-  tags: weave
-  
-- name: "weave workaround | get yaml"
+# TODO: manage version
+- name: "calico | get yaml"
   get_url:
-    url: "https://cloud.weave.works/k8s/net?k8s-version={{ kubectl_version.stdout }}"
-    dest: /tmp/weave.yaml
-  tags: weave
+    url: https://raw.githubusercontent.com/projectcalico/calico/v3.24.5/manifests/calico.yaml
+    dest: /tmp/calico.yaml
+  tags: calico
 
-- name: "weave | apply weave"
+- name: "calico | apply calico manifests"
   kubernetes.core.k8s:
     state: present
-    src: /tmp/weave.yaml
-  tags: weave
+    src: /tmp/calico.yaml
+  tags: calico
 
 - name: "etcdctl"
   unarchive:

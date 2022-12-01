@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 VAGRANTFILE_API_VERSION = "2"
-IMAGE_NAME = "generic/ubuntu1804"
+IMAGE_NAME = "generic/ubuntu2004"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 

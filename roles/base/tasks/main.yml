@@ -1,28 +1,3 @@
-- name: "setup ansible | apt packages"
-  apt:
-    name:
-    - python3-apt
-    - python3-pip
-    update_cache: yes
-  tags: packages, apt
-
-# For idempotency
-- name: "setup ansible | check if python3-kubernetes is installed"
-  shell: |
-    pip3 list --format legacy | grep kubernetes
-  changed_when: false
-  ignore_errors: yes
-  register: python_kubernetes_installed
-  tags: packages, pip
-
-- name: "setup ansible | pip packages"
-  # python3-kubernetes v2.0.0 in ubuntu 18.04 outdated use pip instead
-  pip:
-    name: kubernetes
-    extra_args: "--user"
-  when: python_kubernetes_installed.rc != 0
-  tags: packages, pip
-
 - name: "setup terminal | packages"
   apt:
     name:
@@ -70,6 +45,36 @@
     fstype: swap
     state: absent
   tags: swap
+
+- name: "podman | libcontainers repo key"
+  ansible.builtin.apt_key:
+    url: https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_20.04/Release.key
+    state: present
+  tags: packages, apt, podman
+
+- name: "podman | libcontainers repo"
+  ansible.builtin.apt_repository:
+    repo: deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
+    filename: /etc/apt/sources.list.d/devel:kubic:libcontainers:stable
+    state: present
+  tags: packages, apt, podman
+
+- name: "podman | podman packages"
+  apt:
+    name:
+    - podman
+    - cri-tools
+    - containers-common
+    state: present
+    update_cache: yes
+  tags: packages, apt, podman
+
+# TODO: investigate this containernetworking-plugins kubernetes-cni conflict at kubernetes packages installation
+- name: "podman | libcontainers repo remove"
+  ansible.builtin.apt_repository:
+    repo: "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_{{ ansible_distribution_version }}/ /"
+    state: absent
+  tags: packages, apt, podman
 
 - name: "packages | kubernetes repo key"
   ansible.builtin.apt_key:
@@ -211,19 +216,7 @@
     line: KUBELET_EXTRA_ARGS="--container-runtime remote --container-runtime-endpoint unix:///run/containerd/containerd.sock"
     state: present
   notify: restart containerd
-  
-- name: "podman | projectatomic ppa"
-  ansible.builtin.apt_repository:
-    repo: ppa:projectatomic/ppa
-  
-- name: "podman | podman packages"
-  apt:
-    name:
-    - podman
-    - containers-common
-    state: present
-    update_cache: yes
-  
+
 - name: "podman | podman registries"
   # TODO use file or template
   blockinfile:
@@ -233,7 +226,7 @@
       [registries.search]
       registries = ['docker.io']
   
-  # TODO: user handlers
+  # TODO: use handlers
 - name: "services | kubelet enabled and started"
   ansible.builtin.systemd:
     name: kubelet
