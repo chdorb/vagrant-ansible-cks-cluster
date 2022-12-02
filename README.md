@@ -9,10 +9,14 @@ improve if you update/adapt it to yours. ;-)
 
 Works fine at this time (last commit date) on my two laptops with distro packages:
 
+Fedora
+
 * Fedora 36
 * Vagrant 2.2.19
 * vagrant-libvirt plugin 0.7.0
 * Ansible 2.12
+
+Archlinux
 
 * Archlinux
 * Vagrant 2.3.3
