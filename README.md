@@ -7,9 +7,17 @@ improve if you update/adapt it to yours. ;-)
 
 ## Prerequisites
 
-Works fine at this time (last commit date) on Fedora 36 with:
-* Vagrant 2.2.19 with libvirt provider
+Works fine at this time (last commit date) on my two laptops with distro packages:
+
+* Fedora 36
+* Vagrant 2.2.19
+* vagrant-libvirt plugin 0.7.0
 * Ansible 2.12
+
+* Archlinux
+* Vagrant 2.3.3
+* vagrant-libvirt plugin 0.11.1 (not archlinux packaged, `vagrant plugin install`
+* Ansible 2.14
 
 There are some additionall collection to install for Ansible
 
