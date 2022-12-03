@@ -30,7 +30,11 @@
   
 - name: "init k8s | kubeadm init"
   shell: 
-    kubeadm init --kubernetes-version={{ KUBE_VERSION }} --ignore-preflight-errors=NumCPU --skip-token-print
+    kubeadm init \
+    --kubernetes-version={{ KUBE_VERSION }} \
+    --ignore-preflight-errors=NumCPU \
+    --skip-token-print \
+    --pod-network-cidr 192.168.0.0/16
   when: not kubeadm_file.stat.exists
   tags: kubeadm
   
@@ -47,14 +51,15 @@
     remote_src: yes
   tags: kubeadm
   
-# TODO: manage version
-- name: "calico | get yaml"
+# Calico for policy and flannel (aka Canal) for networking
+# see https://projectcalico.docs.tigera.io/getting-started/kubernetes/flannel/flannel
+- name: "canal | get yaml"
   get_url:
-    url: https://raw.githubusercontent.com/projectcalico/calico/v3.24.5/manifests/calico.yaml
+    url: https://raw.githubusercontent.com/projectcalico/calico/v3.24.1/manifests/canal.yaml
     dest: /tmp/calico.yaml
   tags: calico
 
-- name: "calico | apply calico manifests"
+- name: "canal | apply calico manifests"
   kubernetes.core.k8s:
     state: present
     src: /tmp/calico.yaml
