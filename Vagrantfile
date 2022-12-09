@@ -18,7 +18,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       system.vm.hostname = "cks-#{host}"
       system.vm.provision "ansible" do |ansible|
         ansible.playbook = "playbook-#{host}.yml"
+        # use ansible.verbose for debugging purpose
         # ansible.verbose = "v"
+        # Kubernetes previous version
+        # uncomment ansible.extra_vars to work on k8s upgrade topic
+        # ansible.extra_vars = {
+        #   KUBE_VERSION: "1.25.3"
+        # }
       end
     end
   end
