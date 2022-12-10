@@ -21,6 +21,7 @@
     extra_args: "--user"
   when: python_kubernetes_installed.rc != 0
   tags: packages, pip
+
 # For idempotency, check a file to see if kubeadm already init
 - name: "init k8s | check if needed"
   stat:

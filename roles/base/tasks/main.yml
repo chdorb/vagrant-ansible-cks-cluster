@@ -55,7 +55,7 @@
 - name: "podman | libcontainers repo"
   ansible.builtin.apt_repository:
     repo: deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
-    filename: /etc/apt/sources.list.d/devel:kubic:libcontainers:stable
+    filename: /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
     state: present
   tags: packages, apt, podman
 
@@ -217,15 +217,6 @@
     state: present
   notify: restart containerd
 
-- name: "podman | podman registries"
-  # TODO use file or template
-  blockinfile:
-    path: /etc/containers/registries.conf
-    create: yes
-    block: |
-      [registries.search]
-      registries = ['docker.io']
-  
   # TODO: use handlers
 - name: "services | kubelet enabled and started"
   ansible.builtin.systemd:
