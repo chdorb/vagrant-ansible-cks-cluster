@@ -28,35 +28,35 @@
     path: /etc/kubernetes/scheduler.conf
   register: kubeadm_file
   tags: kubeadm
-  
+
 - name: "init k8s | kubeadm init"
-  shell: 
+  shell:
     kubeadm init \
-    --kubernetes-version={{ KUBE_VERSION }} \
+    --kubernetes-version={{ KUBERNETES_VERSION }} \
     --ignore-preflight-errors=NumCPU \
     --skip-token-print \
     --pod-network-cidr 192.168.0.0/16
   when: not kubeadm_file.stat.exists
   tags: kubeadm
-  
+
 - name: "init k8s | user .kube directory"
   file:
     path: ~/.kube
     state: directory
   tags: kubeadm
-  
+
 - name: "init k8s | copy kubeconfig"
-  copy: 
+  copy:
     src: /etc/kubernetes/admin.conf
     dest: ~/.kube/config # TODO check permissions
     remote_src: yes
   tags: kubeadm
-  
+
 # Calico for policy and flannel (aka Canal) for networking
 # see https://projectcalico.docs.tigera.io/getting-started/kubernetes/flannel/flannel
 - name: "canal | get yaml"
   get_url:
-    url: https://raw.githubusercontent.com/projectcalico/calico/v3.24.1/manifests/canal.yaml
+    url: "https://raw.githubusercontent.com/projectcalico/calico/v{{ CALICO_VERSION }}/manifests/canal.yaml"
     dest: /tmp/calico.yaml
   tags: calico
 
@@ -71,7 +71,7 @@
     src: "https://github.com/etcd-io/etcd/releases/download/{{ ETCDCTL_VERSION }}/etcd-{{ ETCDCTL_VERSION }}-linux-amd64.tar.gz"
     dest: /usr/bin/
     remote_src: yes
-    extra_opts: 
+    extra_opts:
     - --strip-components=1
     - etcd-{{ ETCDCTL_VERSION }}-linux-amd64/etcdctl
   tags: etcd

@@ -95,14 +95,14 @@
     name:
     - docker.io
     - containerd
-    - "kubelet={{ KUBE_VERSION }}-00" 
-    - "kubeadm={{ KUBE_VERSION }}-00" 
-    - "kubectl={{ KUBE_VERSION }}-00" 
+    - "kubelet={{ KUBERNETES_VERSION }}-00"
+    - "kubeadm={{ KUBERNETES_VERSION }}-00"
+    - "kubectl={{ KUBERNETES_VERSION }}-00"
     - kubernetes-cni
     state: present
     update_cache: yes
   tags: packages, apt
-  
+
 - name: "packages | hold kubernetes packages"
   dpkg_selections:
     name: "{{ item }}"
@@ -113,7 +113,17 @@
   - kubeadm
   - kubernetes-cni
   tags: packages, apt
-  
+
+- name: "containerd | containerd 1.6 over apt-installed-version"
+  unarchive:
+    src: " https://github.com/containerd/containerd/releases/download/v{{ CONTAINERD_VERSION }}/containerd-{{ CONTAINERD_VERSION }}-linux-amd64.tar.gz"
+    dest: /usr/bin/
+    remote_src: yes
+    extra_opts:
+    - --strip-components=1
+  notify: restart containerd
+  tags: containerd
+
 - name: "containerd | kernel modules conf"
   lineinfile:
     path: /etc/modules-load.d/containerd.conf
@@ -125,7 +135,7 @@
   - br_netfilter
   notify: restart containerd
   tags: containerd
-  
+
 - name: "containerd | kernel modules load"
   community.general.modprobe:
     name: "{{ item }}"
@@ -135,7 +145,7 @@
   - br_netfilter
   notify: restart containerd
   tags: containerd
-  
+
 - name: "containerd | sysctl configuration"
   ansible.posix.sysctl:
     name: "{{ item }}"
@@ -157,24 +167,25 @@
     state: directory
   notify: restart containerd
   tags: containerd
-  
+
 - name: "containerd configuration | containerd config"
   # TODO use file or template
   blockinfile:
     path: /etc/containerd/config.toml
     create: yes
     block: |
-      disabled_plugins = []
-      imports = []
-      oom_score = 0
-      plugin_dir = ""
-      required_plugins = []
+      version = 2
+
       root = "/var/lib/containerd"
       state = "/run/containerd"
-      version = 2
-      
+      oom_score = 0
+      imports = []
+
+      plugin_dir = ""
+      disabled_plugins = []
+      required_plugins = []
+
       [plugins]
-      
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
           [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
             base_runtime_spec = ""
@@ -184,7 +195,6 @@
             runtime_engine = ""
             runtime_root = ""
             runtime_type = "io.containerd.runc.v2"
-      
             [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
               BinaryName = ""
               CriuImagePath = ""
@@ -200,7 +210,7 @@
     state: present
   notify: restart containerd
   tags: containerd
-  
+
 - name: "containerd configuration | crictl containerd runtime"
   lineinfile:
     path: /etc/crictl.yaml
@@ -208,25 +218,22 @@
     line: "runtime-endpoint: unix:///run/containerd/containerd.sock"
     state: present
   notify: restart containerd
-  
+  tags: containerd, crictl
+
 - name: "containerd configuration | kubelet containerd runtime"
   lineinfile:
     path: /etc/default/kubelet
     create: yes
-    line: KUBELET_EXTRA_ARGS="--container-runtime remote --container-runtime-endpoint unix:///run/containerd/containerd.sock"
+    line: KUBELET_EXTRA_ARGS="--container-runtime-endpoint unix:///run/containerd/containerd.sock"
     state: present
   notify: restart containerd
+  tags: containerd, kubelet
 
-  # TODO: use handlers
+  # TODO: use handlers ?
 - name: "services | kubelet enabled and started"
   ansible.builtin.systemd:
     name: kubelet
     state: started
     daemon_reload: yes
     enabled: yes
-  
-- name: "services | containerd restarted and enabled"
-  ansible.builtin.systemd:
-    name: containerd
-    daemon_reload: yes
-    enabled: yes
+  tags: kubelet
