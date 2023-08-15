@@ -34,6 +34,10 @@
     replace: '\1'
   tags: bash
 
+- name: "tools | include exam additionnal tools"
+  ansible.builtin.include_tasks:
+    file: additionnal_tools.yaml
+
 - name: "disable swap | disable swap"
   shell: swapoff -a
   when: ansible_swaptotal_mb > 0
