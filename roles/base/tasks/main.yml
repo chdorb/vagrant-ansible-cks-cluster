@@ -241,3 +241,8 @@
     daemon_reload: yes
     enabled: yes
   tags: kubelet
+
+- name: "course | git clone cks course repository"
+  ansible.builtin.git:
+    repo: https://github.com/killer-sh/cks-course-environment.git
+    dest: /root/cks-course-environment
