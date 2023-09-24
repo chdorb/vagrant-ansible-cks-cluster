@@ -36,7 +36,7 @@
 
 - name: "tools | include exam additionnal tools"
   ansible.builtin.include_tasks:
-    file: additionnal_tools.yaml
+    file: additionnal_tools.yml
 
 - name: "disable swap | disable swap"
   shell: swapoff -a
@@ -246,3 +246,16 @@
   ansible.builtin.git:
     repo: https://github.com/killer-sh/cks-course-environment.git
     dest: /root/cks-course-environment
+
+# TO FIX
+# - name: "gvisor | install and configure gvisor"
+#   ansible.builtin.include_tasks:
+#     file: gvisor.yml
+
+- name: "falco | install and run falco"
+  ansible.builtin.include_tasks:
+    file: falco.yml
+
+- name: "kube-bench | install kube-bench"
+  ansible.builtin.include_tasks:
+    file: kube-bench.yml

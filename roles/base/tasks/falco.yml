@@ -1,0 +1,49 @@
+# https://falco.org/docs/install-operate/installation/#installation-details
+- name: "falco | falco apt repo key"
+  ansible.builtin.apt_key:
+    url: https://falco.org/repo/falcosecurity-packages.asc
+    state: present
+  tags: packages, apt, falco
+
+- name: "falco | falco apt repo"
+  ansible.builtin.apt_repository:
+    repo: deb https://download.falco.org/packages/deb stable main
+    filename: falco
+    update_cache: yes
+    state: present
+  tags: packages, apt, falco
+
+- name: "falco | prerequisite packages"
+  ansible.builtin.apt:
+    name:
+    - dkms
+    - make
+    - linux-headers-{{ ansible_kernel }}
+    state: present
+    update_cache: yes
+  tags: packages, apt, falco
+
+- name: "falco | falco package"
+  ansible.builtin.apt:
+    name: falco
+    state: present
+    update_cache: yes
+  tags: packages, apt, falco
+
+- name: "falco | check if kernel module installed"
+  stat:
+    path: /lib/modules/{{ ansible_kernel }}/updates/dkms/falco.ko
+  register: falco_module_file
+  tags: falco, postinstall
+
+- name: "falco | compile kernel module"
+  ansible.builtin.shell: falco-driver-loader --compile
+  when: not falco_module_file.stat.exists
+  tags: falco, postinstall
+
+- name: "falco | falco-kmod service"
+  ansible.builtin.systemd:
+    name: falco-kmod
+    state: started
+    enabled: yes
+  tags: falco, postinstall, service

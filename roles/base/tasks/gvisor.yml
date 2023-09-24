@@ -1,0 +1,35 @@
+# https://gvisor.dev/docs/user_guide/install/
+#
+- name: "gvisor | gvisor apt repo key"
+  ansible.builtin.apt_key:
+    url: https://gvisor.dev/archive.key
+    state: present
+  tags: packages, apt, gvisor
+
+- name: "gvisor | gvisor apt repo"
+  ansible.builtin.apt_repository:
+    repo: deb https://storage.googleapis.com/gvisor/releases release main
+    filename: gvisor
+    update_cache: yes
+    state: present
+  tags: packages, apt, gvisor
+
+- name: "gvisor | runsc package"
+  apt:
+    name: runsc
+    state: present
+    update_cache: yes
+  tags: packages, apt, gvisor
+
+# https://gvisor.dev/docs/user_guide/containerd/quick_start/
+- name: "gvisor | containerd configuration"
+  # TODO use file or template
+  # TODO to fix conflict with ansible managed config
+  blockinfile:
+    path: /etc/containerd/config.toml
+    insertafter: "[plugins]"
+    block: |
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runsc]
+          runtime_type = "io.containerd.runsc.v1"
+  notify: restart containerd
+  tags: gvisor, containerd

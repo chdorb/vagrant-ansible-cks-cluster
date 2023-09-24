@@ -1,0 +1,4 @@
+- name: "kube-bench | install kube-bench"
+  ansible.builtin.apt:
+    deb: https://github.com/aquasecurity/kube-bench/releases/download/v0.6.17/kube-bench_0.6.17_linux_amd64.deb
+  tags: kube-bench, packages

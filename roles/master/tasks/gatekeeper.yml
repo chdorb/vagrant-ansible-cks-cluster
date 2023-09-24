@@ -1,0 +1,49 @@
+- name: "OPA | prerequisite helm by snap"
+  community.general.snap:
+    name: helm
+    classic: true
+  tags: opa, helm
+
+- name: "Helm | diff plugin for better ansible results"
+  kubernetes.core.helm_plugin:
+    plugin_path: https://github.com/databus23/helm-diff
+    state: present
+  tags: opa, helm
+
+- name: "OPA | prerequisite yaml by apt"
+  ansible.builtin.apt:
+    name: python3-yaml
+  tags: opa
+
+# https://open-policy-agent.github.io/gatekeeper/website/docs/install/#deploying-via-helm
+- name: "OPA | helm repository"
+  kubernetes.core.helm_repository:
+    name: gatekeeper
+    repo_url: https://open-policy-agent.github.io/gatekeeper/charts
+  tags: opa
+
+- name: "OPA | installation by helm"
+  kubernetes.core.helm:
+    name: gatekeeper
+    chart_ref: gatekeeper/gatekeeper
+    release_namespace: gatekeeper-system
+    create_namespace: true
+  tags: opa
+
+- name: "OPA | install opa constrainttemplate"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', 'opa_repo_constrainttemplate.yaml') | from_yaml }}"
+  register: constrainttemplate
+
+- name: "OPA | wait 10s before install constraint"
+  ansible.builtin.wait_for:
+    timeout: 10
+  when: constrainttemplate is changed
+
+- name: "OPA | install opa constraint"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', 'opa_repo_constraint.yaml') | from_yaml }}"
+  register: constrainttemplate
+

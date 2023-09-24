@@ -46,9 +46,10 @@
   tags: kubeadm
 
 - name: "init k8s | copy kubeconfig"
-  copy:
+  ansible.builtin.copy:
     src: /etc/kubernetes/admin.conf
-    dest: ~/.kube/config # TODO check permissions
+    dest: ~/.kube/config
+    mode: "0600"
     remote_src: yes
   tags: kubeadm
 
@@ -80,3 +81,7 @@
   file:
     path: /etc/cluster_ready
     state: touch
+
+- name: "OPA/Gatekeeper | install"
+  ansible.builtin.include_tasks:
+    file: gatekeeper.yml
