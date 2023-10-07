@@ -20,16 +20,3 @@
     state: present
     update_cache: yes
   tags: packages, apt, gvisor
-
-# https://gvisor.dev/docs/user_guide/containerd/quick_start/
-- name: "gvisor | containerd configuration"
-  # TODO use file or template
-  # TODO to fix conflict with ansible managed config
-  blockinfile:
-    path: /etc/containerd/config.toml
-    insertafter: "[plugins]"
-    block: |
-        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runsc]
-          runtime_type = "io.containerd.runsc.v1"
-  notify: restart containerd
-  tags: gvisor, containerd

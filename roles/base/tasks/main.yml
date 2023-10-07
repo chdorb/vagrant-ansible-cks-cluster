@@ -118,6 +118,11 @@
   - kubernetes-cni
   tags: packages, apt
 
+- name: "gvisor | install and configure gvisor"
+  ansible.builtin.include_tasks:
+    file: gvisor.yml
+  when: gvisor.enabled
+
 - name: "containerd | containerd 1.6 over apt-installed-version"
   unarchive:
     src: " https://github.com/containerd/containerd/releases/download/v{{ CONTAINERD_VERSION }}/containerd-{{ CONTAINERD_VERSION }}-linux-amd64.tar.gz"
@@ -173,45 +178,9 @@
   tags: containerd
 
 - name: "containerd configuration | containerd config"
-  # TODO use file or template
-  blockinfile:
-    path: /etc/containerd/config.toml
-    create: yes
-    block: |
-      version = 2
-
-      root = "/var/lib/containerd"
-      state = "/run/containerd"
-      oom_score = 0
-      imports = []
-
-      plugin_dir = ""
-      disabled_plugins = []
-      required_plugins = []
-
-      [plugins]
-        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
-          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-            base_runtime_spec = ""
-            container_annotations = []
-            pod_annotations = []
-            privileged_without_host_devices = false
-            runtime_engine = ""
-            runtime_root = ""
-            runtime_type = "io.containerd.runc.v2"
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-              BinaryName = ""
-              CriuImagePath = ""
-              CriuPath = ""
-              CriuWorkPath = ""
-              IoGid = 0
-              IoUid = 0
-              NoNewKeyring = false
-              NoPivotRoot = false
-              Root = ""
-              ShimCgroup = ""
-              SystemdCgroup = true
-    state: present
+  ansible.builtin.template:
+    src: containerd_config.toml.j2
+    dest: /etc/containerd/config.toml
   notify: restart containerd
   tags: containerd
 
@@ -246,11 +215,6 @@
   ansible.builtin.git:
     repo: https://github.com/killer-sh/cks-course-environment.git
     dest: /root/cks-course-environment
-
-# TO FIX
-# - name: "gvisor | install and configure gvisor"
-#   ansible.builtin.include_tasks:
-#     file: gvisor.yml
 
 - name: "falco | install and run falco"
   ansible.builtin.include_tasks:
