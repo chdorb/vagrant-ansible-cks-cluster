@@ -41,7 +41,7 @@
   when: not falco_module_file.stat.exists
   tags: falco, postinstall
 
-- name: "falco | falco-kmod service"
+- name: "falco | falco service"
   ansible.builtin.systemd:
     name: falco-kmod
     state: started

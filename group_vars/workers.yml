@@ -1,0 +1,4 @@
+falco:
+  enabled: true
+kube-bench:
+  enabled: false

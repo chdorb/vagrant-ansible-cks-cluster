@@ -18,6 +18,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       system.vm.hostname = "cks-#{host}"
       system.vm.provision "ansible" do |ansible|
         ansible.playbook = "playbook-#{host}.yml"
+        ansible.groups = {
+         "master" => ["master"],
+         "workers" => ["worker"]
+        }
         # use ansible.verbose for debugging purpose
         # ansible.verbose = "v"
         # Kubernetes previous version

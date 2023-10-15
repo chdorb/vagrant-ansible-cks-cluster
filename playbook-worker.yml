@@ -2,5 +2,10 @@
 - hosts: cks-worker
   become: yes
   roles:
-    - base
-    - worker
+    - role: base
+      vars:
+        falco:
+          enabled: true
+        kube_bench:
+          enabled: false
+    - role: worker
