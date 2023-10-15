@@ -1,0 +1,30 @@
+# NOTE: podman is available in official ubuntu repo since 22.04 | TODO: install from ubuntu repo when upgrading to 22.04
+- name: "podman | libcontainers repo key"
+  ansible.builtin.apt_key:
+    url: https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_20.04/Release.key
+    state: present
+  tags: packages, apt, podman
+
+- name: "podman | libcontainers repo"
+  ansible.builtin.apt_repository:
+    repo: deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
+    filename: /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+    state: present
+  tags: packages, apt, podman
+
+- name: "podman | podman packages"
+  apt:
+    name:
+    - podman
+    - cri-tools
+    - containers-common
+    state: present
+    update_cache: yes
+  tags: packages, apt, podman
+
+# TODO: investigate this containernetworking-plugins kubernetes-cni conflict at kubernetes packages installation
+- name: "podman | libcontainers repo remove"
+  ansible.builtin.apt_repository:
+    repo: "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_{{ ansible_distribution_version }}/ /"
+    state: absent
+  tags: packages, apt, podman

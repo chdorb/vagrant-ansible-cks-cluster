@@ -1,0 +1,109 @@
+# Didn't figure out why Kim done that…
+#- name: "containerd | containerd 1.6 over apt-installed-version"
+#  unarchive:
+#    src: " https://github.com/containerd/containerd/releases/download/v{{ CONTAINERD_VERSION }}/containerd-{{ CONTAINERD_VERSION }}-linux-amd64.tar.gz"
+#    dest: /usr/bin/
+#    remote_src: yes
+#    extra_opts:
+#    - --strip-components=1
+#  notify: restart containerd
+#  tags: containerd
+
+- name: "containerd | kernel modules conf"
+  lineinfile:
+    path: /etc/modules-load.d/containerd.conf
+    line: "{{ item }}"
+    create: yes
+    state: present
+  with_items:
+  - overlay
+  - br_netfilter
+  notify: restart containerd
+  tags: containerd
+
+- name: "containerd | kernel modules load"
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - overlay
+  - br_netfilter
+  notify: restart containerd
+  tags: containerd
+
+- name: "containerd | sysctl configuration"
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: '1'
+    sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+    sysctl_set: yes
+    state: present
+    reload: yes
+  with_items:
+  - net.bridge.bridge-nf-call-iptables
+  - net.ipv4.ip_forward
+  - net.bridge.bridge-nf-call-ip6tables
+  notify: restart containerd
+  tags: containerd
+
+- name: "containerd | containerd configuration path"
+  file:
+    path: /etc/containerd
+    state: directory
+  notify: restart containerd
+  tags: containerd
+
+- name: "containerd configuration | containerd config"
+  ansible.builtin.template:
+    src: containerd_config.toml.j2
+    dest: /etc/containerd/config.toml
+  notify: restart containerd
+  tags: containerd
+
+- name: "containerd configuration | crictl containerd runtime"
+  lineinfile:
+    path: /etc/crictl.yaml
+    create: yes
+    line: "runtime-endpoint: unix:///run/containerd/containerd.sock"
+    state: present
+  notify: restart containerd
+  tags: containerd, crictl
+
+- name: "containerd configuration | kubelet containerd runtime"
+  lineinfile:
+    path: /etc/default/kubelet
+    create: yes
+    line: KUBELET_EXTRA_ARGS="--container-runtime-endpoint unix:///run/containerd/containerd.sock"
+    state: present
+  notify: restart containerd
+  tags: containerd, kubelet
+
+# https://github.com/containerd/containerd/blob/main/docs/getting-started.md#option-2-from-apt-get-or-dnf
+# https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
+- name: "containerd | docker repo keyring directory"
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+  tags: packages, apt, containerd
+
+- name: "containerd | docker repo key"
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+  register: ansible_repo_key
+  tags: packages, apt, containerd
+
+- name: "containerd | docker repo"
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by={{ ansible_repo_key.dest }}] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    filename: docker
+    update_cache: yes
+    state: present
+  tags: packages, apt, containerd
+
+- name: "containerd | containerd.io package"
+  apt:
+    name: containerd.io
+    state: present
+    update_cache: yes
+  tags: packages, apt, containerd

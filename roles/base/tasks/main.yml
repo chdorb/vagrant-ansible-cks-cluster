@@ -50,35 +50,9 @@
     state: absent
   tags: swap
 
-- name: "podman | libcontainers repo key"
-  ansible.builtin.apt_key:
-    url: https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_20.04/Release.key
-    state: present
-  tags: packages, apt, podman
-
-- name: "podman | libcontainers repo"
-  ansible.builtin.apt_repository:
-    repo: deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
-    filename: /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-    state: present
-  tags: packages, apt, podman
-
-- name: "podman | podman packages"
-  apt:
-    name:
-    - podman
-    - cri-tools
-    - containers-common
-    state: present
-    update_cache: yes
-  tags: packages, apt, podman
-
-# TODO: investigate this containernetworking-plugins kubernetes-cni conflict at kubernetes packages installation
-- name: "podman | libcontainers repo remove"
-  ansible.builtin.apt_repository:
-    repo: "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_{{ ansible_distribution_version }}/ /"
-    state: absent
-  tags: packages, apt, podman
+- name: "podman | install and configure podman"
+  ansible.builtin.include_tasks:
+    file: podman.yml
 
 - name: "packages | kubernetes repo key"
   ansible.builtin.apt_key:
@@ -97,8 +71,8 @@
 - name: "packages | kubernetes packages"
   apt:
     name:
-    - docker.io
-    - containerd
+#    - docker.io
+#    - containerd
     - "kubelet={{ KUBERNETES_VERSION }}-00"
     - "kubeadm={{ KUBERNETES_VERSION }}-00"
     - "kubectl={{ KUBERNETES_VERSION }}-00"
@@ -123,85 +97,9 @@
     file: gvisor.yml
   when: gvisor.enabled
 
-# Didn't figure out why Kim done that…
-#- name: "containerd | containerd 1.6 over apt-installed-version"
-#  unarchive:
-#    src: " https://github.com/containerd/containerd/releases/download/v{{ CONTAINERD_VERSION }}/containerd-{{ CONTAINERD_VERSION }}-linux-amd64.tar.gz"
-#    dest: /usr/bin/
-#    remote_src: yes
-#    extra_opts:
-#    - --strip-components=1
-#  notify: restart containerd
-#  tags: containerd
-
-- name: "containerd | kernel modules conf"
-  lineinfile:
-    path: /etc/modules-load.d/containerd.conf
-    line: "{{ item }}"
-    create: yes
-    state: present
-  with_items:
-  - overlay
-  - br_netfilter
-  notify: restart containerd
-  tags: containerd
-
-- name: "containerd | kernel modules load"
-  community.general.modprobe:
-    name: "{{ item }}"
-    state: present
-  with_items:
-  - overlay
-  - br_netfilter
-  notify: restart containerd
-  tags: containerd
-
-- name: "containerd | sysctl configuration"
-  ansible.posix.sysctl:
-    name: "{{ item }}"
-    value: '1'
-    sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
-    sysctl_set: yes
-    state: present
-    reload: yes
-  with_items:
-  - net.bridge.bridge-nf-call-iptables
-  - net.ipv4.ip_forward
-  - net.bridge.bridge-nf-call-ip6tables
-  notify: restart containerd
-  tags: containerd
-
-- name: "containerd | containerd configuration path"
-  file:
-    path: /etc/containerd
-    state: directory
-  notify: restart containerd
-  tags: containerd
-
-- name: "containerd configuration | containerd config"
-  ansible.builtin.template:
-    src: containerd_config.toml.j2
-    dest: /etc/containerd/config.toml
-  notify: restart containerd
-  tags: containerd
-
-- name: "containerd configuration | crictl containerd runtime"
-  lineinfile:
-    path: /etc/crictl.yaml
-    create: yes
-    line: "runtime-endpoint: unix:///run/containerd/containerd.sock"
-    state: present
-  notify: restart containerd
-  tags: containerd, crictl
-
-- name: "containerd configuration | kubelet containerd runtime"
-  lineinfile:
-    path: /etc/default/kubelet
-    create: yes
-    line: KUBELET_EXTRA_ARGS="--container-runtime-endpoint unix:///run/containerd/containerd.sock"
-    state: present
-  notify: restart containerd
-  tags: containerd, kubelet
+- name: "containerd | install and configure containerd"
+  ansible.builtin.include_tasks:
+    file: containerd.yml
 
 - name: "kubelet | kube-bench 4.1.1 kubelet service file permissions"
   ansible.builtin.file:
