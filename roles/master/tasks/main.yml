@@ -81,6 +81,7 @@
   file:
     path: /etc/cluster_ready
     state: touch
+  changed_when: false
 
 - name: "OPA/Gatekeeper | install"
   ansible.builtin.include_tasks:

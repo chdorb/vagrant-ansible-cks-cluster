@@ -16,15 +16,7 @@
   apt:
     name:
     - podman
-    - cri-tools
-    - containers-common
+    install_recommends: false
     state: present
     update_cache: yes
-  tags: packages, apt, podman
-
-# TODO: investigate this containernetworking-plugins kubernetes-cni conflict at kubernetes packages installation
-- name: "podman | libcontainers repo remove"
-  ansible.builtin.apt_repository:
-    repo: "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_{{ ansible_distribution_version }}/ /"
-    state: absent
   tags: packages, apt, podman
