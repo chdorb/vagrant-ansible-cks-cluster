@@ -123,15 +123,16 @@
     file: gvisor.yml
   when: gvisor.enabled
 
-- name: "containerd | containerd 1.6 over apt-installed-version"
-  unarchive:
-    src: " https://github.com/containerd/containerd/releases/download/v{{ CONTAINERD_VERSION }}/containerd-{{ CONTAINERD_VERSION }}-linux-amd64.tar.gz"
-    dest: /usr/bin/
-    remote_src: yes
-    extra_opts:
-    - --strip-components=1
-  notify: restart containerd
-  tags: containerd
+# Didn't figure out why Kim done that…
+#- name: "containerd | containerd 1.6 over apt-installed-version"
+#  unarchive:
+#    src: " https://github.com/containerd/containerd/releases/download/v{{ CONTAINERD_VERSION }}/containerd-{{ CONTAINERD_VERSION }}-linux-amd64.tar.gz"
+#    dest: /usr/bin/
+#    remote_src: yes
+#    extra_opts:
+#    - --strip-components=1
+#  notify: restart containerd
+#  tags: containerd
 
 - name: "containerd | kernel modules conf"
   lineinfile:
