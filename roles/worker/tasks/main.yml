@@ -5,9 +5,9 @@
   tags: join
 
 - name: worker | wait for master
-  wait_for:
-    path: /etc/cluster_ready
-    state: present
+  ansible.builtin.wait_for:
+    host: cks-master
+    port: 6443
   delegate_to: cks-master
   when: not worker_join.stat.exists
   tags: join

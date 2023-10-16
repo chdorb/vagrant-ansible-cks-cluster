@@ -77,12 +77,6 @@
     - etcd-{{ ETCDCTL_VERSION }}-linux-amd64/etcdctl
   tags: etcd
 
-- name: "cluster ready" # TODO: maybe use wait
-  file:
-    path: /etc/cluster_ready
-    state: touch
-  changed_when: false
-
-- name: "OPA/Gatekeeper | install"
-  ansible.builtin.include_tasks:
-    file: gatekeeper.yml
+#- name: "OPA/Gatekeeper | install"
+#  ansible.builtin.include_tasks:
+#    file: gatekeeper.yml
