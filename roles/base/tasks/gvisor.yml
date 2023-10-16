@@ -8,7 +8,7 @@
 
 - name: "gvisor | gvisor apt repo"
   ansible.builtin.apt_repository:
-    repo: deb https://storage.googleapis.com/gvisor/releases release main
+    repo: deb [arch=amd64] https://storage.googleapis.com/gvisor/releases release main
     filename: gvisor
     update_cache: yes
     state: present

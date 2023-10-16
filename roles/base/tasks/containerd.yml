@@ -80,22 +80,16 @@
 
 # https://github.com/containerd/containerd/blob/main/docs/getting-started.md#option-2-from-apt-get-or-dnf
 # https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
-- name: "containerd | docker repo keyring directory"
-  file:
-    path: /etc/apt/keyrings
-    state: directory
-  tags: packages, apt, containerd
-
 - name: "containerd | docker repo key"
   ansible.builtin.get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
     dest: /etc/apt/keyrings/docker.asc
-  register: ansible_repo_key
+  register: docker_repo_key
   tags: packages, apt, containerd
 
 - name: "containerd | docker repo"
   ansible.builtin.apt_repository:
-    repo: "deb [arch=amd64 signed-by={{ ansible_repo_key.dest }}] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    repo: "deb [arch=amd64 signed-by={{ docker_repo_key.dest }}] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
     filename: docker
     update_cache: yes
     state: present

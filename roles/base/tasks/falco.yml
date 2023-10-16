@@ -7,7 +7,7 @@
 
 - name: "falco | falco apt repo"
   ansible.builtin.apt_repository:
-    repo: deb https://download.falco.org/packages/deb stable main
+    repo: deb [arch=amd64] https://download.falco.org/packages/deb stable main
     filename: falco
     update_cache: yes
     state: present
