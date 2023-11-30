@@ -1,7 +1,11 @@
 # See https://docs.linuxfoundation.org/tc-docs/certification/important-instructions-cks#cks-environment
-- name: "additionnal tools | apt"
+- name: "ensure additionnal tools | apt"
   ansible.builtin.apt:
-    name: jq
+    name:
+    - jq
+    - tmux
+    - curl
+    - wget
 
 - name: "additionnal tools | snap"
   community.general.snap:
