@@ -53,19 +53,15 @@
     remote_src: yes
   tags: kubeadm
 
-# Calico for policy and flannel (aka Canal) for networking
-# see https://projectcalico.docs.tigera.io/getting-started/kubernetes/flannel/flannel
-- name: "canal | get yaml"
-  get_url:
-    url: "https://raw.githubusercontent.com/projectcalico/calico/v{{ CALICO_VERSION }}/manifests/canal.yaml"
-    dest: /tmp/calico.yaml
-  tags: calico
+- name: "Helm | install"
+  ansible.builtin.include_tasks:
+    file: helm.yml
+  tags: helm
 
-- name: "canal | apply calico manifests"
-  kubernetes.core.k8s:
-    state: present
-    src: /tmp/calico.yaml
-  tags: calico
+- name: "Cilium CNI | install"
+  ansible.builtin.include_tasks:
+    file: cilium_cni.yml
+  tags: cilium, cni
 
 - name: "etcdctl"
   unarchive:

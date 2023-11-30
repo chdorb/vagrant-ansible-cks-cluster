@@ -1,0 +1,16 @@
+- name: "Helm | snap package"
+  community.general.snap:
+    name: helm
+    classic: true
+  tags: helm, packages
+
+- name: "Helm | ansible prerequisite PyYaml apt package"
+  ansible.builtin.apt:
+    name: python3-yaml
+  tags: helm, packages
+
+- name: "Helm | diff plugin for better ansible results"
+  kubernetes.core.helm_plugin:
+    plugin_path: https://github.com/databus23/helm-diff
+    state: present
+  tags: helm

@@ -1,20 +1,3 @@
-- name: "OPA | prerequisite helm by snap"
-  community.general.snap:
-    name: helm
-    classic: true
-  tags: opa, helm
-
-- name: "Helm | diff plugin for better ansible results"
-  kubernetes.core.helm_plugin:
-    plugin_path: https://github.com/databus23/helm-diff
-    state: present
-  tags: opa, helm
-
-- name: "OPA | prerequisite yaml by apt"
-  ansible.builtin.apt:
-    name: python3-yaml
-  tags: opa
-
 # https://open-policy-agent.github.io/gatekeeper/website/docs/install/#deploying-via-helm
 - name: "OPA | helm repository"
   kubernetes.core.helm_repository:
