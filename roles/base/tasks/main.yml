@@ -61,40 +61,23 @@
   ansible.builtin.include_tasks:
     file: podman.yml
 
-# TODO: This on ansible 2.15
-#- name: "packages | kubernetes repo"
-#  ansible.builtin.deb822_repository:
-#    name: kubernetes
-#    types: [deb]
-#    uris: "https://apt.kubernetes.io"
-#    signed_by: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-#    suites: [kubernetes-xenial]
-#    components: [main]
-#    state: present
-#    enabled: yes
-#  tags: packages, apt
-
-- name: "packages | kubernetes repo key"
-  ansible.builtin.get_url:
-    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
-  register: kubernetes_repo_key
-  tags: packages, apt
-
 - name: "packages | kubernetes repo"
-  ansible.builtin.apt_repository:
-    repo: "deb [signed-by={{ kubernetes_repo_key.dest }}] https://apt.kubernetes.io/ kubernetes-xenial main"
-    filename: kubernetes
-    update_cache: yes
+  ansible.builtin.deb822_repository:
+    name: kubernetes
+    types: [deb]
+    uris: "https://pkgs.k8s.io/core:/stable:/v1.28/deb/"
+    signed_by: "https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key"
+    suites: [/]
     state: present
+    enabled: true
   tags: packages, apt
 
 - name: "packages | kubernetes packages"
   apt:
     name:
-    - "kubelet={{ KUBERNETES_VERSION }}-00"
-    - "kubeadm={{ KUBERNETES_VERSION }}-00"
-    - "kubectl={{ KUBERNETES_VERSION }}-00"
+    - "kubelet={{ KUBERNETES_VERSION }}-1.1"
+    - "kubeadm={{ KUBERNETES_VERSION }}-1.1"
+    - "kubectl={{ KUBERNETES_VERSION }}-1.1"
     - kubernetes-cni
     state: present
     update_cache: yes
@@ -119,15 +102,6 @@
 - name: "containerd | install and configure containerd"
   ansible.builtin.include_tasks:
     file: containerd.yml
-
-- name: "kubelet | kube-bench 4.1.1 kubelet service file permissions"
-  ansible.builtin.file:
-    path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-    state: file
-    owner: root
-    group: root
-    mode: "0600"
-  tags: kubelet
 
   # TODO: use handlers ?
 - name: "services | kubelet enabled and started"

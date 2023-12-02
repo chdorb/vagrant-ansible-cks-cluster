@@ -11,10 +11,10 @@ Works fine at this time (last commit date) on my two laptops with distro package
 
 Fedora
 
-* Fedora 37
-* Vagrant 2.2.19
-* vagrant-libvirt plugin 0.7.0
-* Ansible 2.14
+* Fedora 39
+* Vagrant 2.3.4
+* vagrant-libvirt plugin 0.11.2
+* Ansible 2.16
 
 Archlinux
 

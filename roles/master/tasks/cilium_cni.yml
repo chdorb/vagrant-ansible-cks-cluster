@@ -5,6 +5,7 @@
     repo_url: https://helm.cilium.io/
   tags: cni, cilium
 
+# TODO: idempotency
 - name: "Cilium | helm installation"
   kubernetes.core.helm:
     name: cilium
