@@ -15,7 +15,7 @@
   tags: packages, apt, gvisor
 
 - name: "gvisor | runsc package"
-  apt:
+  ansible.builtin.apt:
     name: runsc
     state: present
     update_cache: yes

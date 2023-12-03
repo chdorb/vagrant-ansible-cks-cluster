@@ -1,5 +1,5 @@
 - name: "setup ansible | apt packages"
-  apt:
+  ansible.builtin.apt:
     name:
     - python3-pip
     update_cache: yes
@@ -7,7 +7,7 @@
 
 ## For idempotency
 - name: "setup ansible | check if python3-kubernetes is installed"
-  shell: |
+  ansible.builtin.command: |
     pip3 list --format columns | grep kubernetes
   changed_when: false
   ignore_errors: yes
@@ -16,7 +16,7 @@
 
 - name: "setup ansible | pip packages"
   # python3-kubernetes v7.0.0 in ubuntu 20.04 outdated use pip instead
-  pip:
+  ansible.builtin.pip:
     name: kubernetes
     extra_args: "--user"
   when: python_kubernetes_installed.rc != 0
@@ -24,13 +24,13 @@
 
 # For idempotency, check a file to see if kubeadm already init
 - name: "init k8s | check if needed"
-  stat:
+  ansible.builtin.stat:
     path: /etc/kubernetes/scheduler.conf
   register: kubeadm_file
   tags: kubeadm
 
 - name: "init k8s | kubeadm init"
-  shell:
+  ansible.builtin.command:
     kubeadm init \
     --kubernetes-version={{ kubernetes.version }} \
     --ignore-preflight-errors=NumCPU \
@@ -40,7 +40,7 @@
   tags: kubeadm
 
 - name: "init k8s | user .kube directory"
-  file:
+  ansible.builtin.file:
     path: ~/.kube
     state: directory
   tags: kubeadm
@@ -64,7 +64,7 @@
   tags: cilium, cni
 
 - name: "etcdctl"
-  unarchive:
+  ansible.builtin.unarchive:
     src: "https://github.com/etcd-io/etcd/releases/download/{{ etcdctl.version }}/etcd-{{ etcdctl.version }}-linux-amd64.tar.gz"
     dest: /usr/bin/
     remote_src: yes

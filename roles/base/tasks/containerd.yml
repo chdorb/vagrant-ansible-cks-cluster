@@ -10,7 +10,7 @@
 #  tags: containerd
 
 - name: "containerd | kernel modules conf"
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/modules-load.d/containerd.conf
     line: "{{ item }}"
     create: yes
@@ -47,7 +47,7 @@
   tags: containerd
 
 - name: "containerd | containerd configuration path"
-  file:
+  ansible.builtin.file:
     path: /etc/containerd
     state: directory
   notify: restart containerd
@@ -61,7 +61,7 @@
   tags: containerd
 
 - name: "containerd configuration | crictl containerd runtime"
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/crictl.yaml
     create: yes
     line: "runtime-endpoint: unix:///run/containerd/containerd.sock"
@@ -70,7 +70,7 @@
   tags: containerd, crictl
 
 - name: "containerd configuration | kubelet containerd runtime"
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/default/kubelet
     create: yes
     line: KUBELET_EXTRA_ARGS="--container-runtime-endpoint unix:///run/containerd/containerd.sock"
@@ -96,7 +96,7 @@
   tags: packages, apt, containerd
 
 - name: "containerd | containerd.io package"
-  apt:
+  ansible.builtin.apt:
     name: containerd.io
     state: present
     update_cache: yes

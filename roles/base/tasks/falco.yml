@@ -31,7 +31,7 @@
   tags: packages, apt, falco
 
 - name: "falco | check if kernel module installed"
-  stat:
+  ansible.builtin.stat:
     path: /lib/modules/{{ ansible_kernel }}/updates/dkms/falco.ko
   register: falco_module_file
   tags: falco, postinstall

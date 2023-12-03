@@ -1,5 +1,5 @@
 - name: "setup terminal | packages"
-  apt:
+  ansible.builtin.apt:
     name:
     - bash-completion
     - binutils
@@ -7,7 +7,7 @@
   tags: packages, apt
 
 - name: "setup terminal | vim configuration"
-  blockinfile:
+  ansible.builtin.blockinfile:
     marker: '" {mark} ANSIBLE MANAGED BLOCK'
     path: ~/.vimrc
     create: yes
@@ -19,7 +19,7 @@
       set autoindent
 
 - name: "setup terminal | bash configuration"
-  blockinfile:
+  ansible.builtin.blockinfile:
     path: ~/.bashrc
     block: |
       source <(kubectl completion bash)
@@ -29,7 +29,7 @@
   tags: bash
 
 - name: "setup terminal | bash configuration"
-  replace:
+  ansible.builtin.replace:
     path: ~/.bashrc
     regexp: '^#(force_color_prompt=yes)$'
     replace: '\1'
@@ -40,7 +40,7 @@
     file: additionnal_tools.yml
 
 - name: "disable swap | disable swap"
-  shell: swapoff -a
+  ansible.builtin.command: swapoff -a
   when: ansible_swaptotal_mb > 0
   tags: swap
 
@@ -52,7 +52,7 @@
   tags: swap
 
 - name: "apt | keyrings directory"
-  file:
+  ansible.builtin.file:
     path: /etc/apt/keyrings
     state: directory
   tags: packages, apt
@@ -73,7 +73,7 @@
   tags: packages, apt
 
 - name: "packages | kubernetes packages"
-  apt:
+  ansible.builtin.apt:
     name:
     - "kubelet={{ kubernetes.version }}-1.1"
     - "kubeadm={{ kubernetes.version }}-1.1"
@@ -84,7 +84,7 @@
   tags: packages, apt
 
 - name: "packages | hold kubernetes packages"
-  dpkg_selections:
+  ansible.builtin.dpkg_selections:
     name: "{{ item }}"
     selection: hold
   with_items:

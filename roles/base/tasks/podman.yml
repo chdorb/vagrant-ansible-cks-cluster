@@ -13,7 +13,7 @@
   tags: packages, apt, podman
 
 - name: "podman | podman packages"
-  apt:
+  ansible.builtin.apt:
     name:
     - podman
     install_recommends: false
