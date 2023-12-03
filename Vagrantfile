@@ -27,7 +27,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         # Kubernetes previous version
         # uncomment ansible.extra_vars to work on k8s upgrade topic
         # ansible.extra_vars = {
-        #   KUBERNETES_VERSION: "1.28.3"
+        #   kubernetes: {
+        #     version: "1.28.3"
+        #   }
         # }
       end
     end

@@ -1,6 +1,6 @@
-KUBERNETES_VERSION: "1.28.4"
-ETCDCTL_VERSION: "v3.5.9"
-#CONTAINERD_VERSION: "1.6.21"
-
+kubernetes:
+  version: "1.28.4"
+etcdctl:
+  version: "v3.5.9"
 gvisor:
   enabled: true

@@ -32,7 +32,7 @@
 - name: "init k8s | kubeadm init"
   shell:
     kubeadm init \
-    --kubernetes-version={{ KUBERNETES_VERSION }} \
+    --kubernetes-version={{ kubernetes.version }} \
     --ignore-preflight-errors=NumCPU \
     --skip-token-print \
     --pod-network-cidr 192.168.0.0/16
@@ -65,12 +65,12 @@
 
 - name: "etcdctl"
   unarchive:
-    src: "https://github.com/etcd-io/etcd/releases/download/{{ ETCDCTL_VERSION }}/etcd-{{ ETCDCTL_VERSION }}-linux-amd64.tar.gz"
+    src: "https://github.com/etcd-io/etcd/releases/download/{{ etcdctl.version }}/etcd-{{ etcdctl.version }}-linux-amd64.tar.gz"
     dest: /usr/bin/
     remote_src: yes
     extra_opts:
     - --strip-components=1
-    - etcd-{{ ETCDCTL_VERSION }}-linux-amd64/etcdctl
+    - etcd-{{ etcdctl.version }}-linux-amd64/etcdctl
   tags: etcd
 
 #- name: "OPA/Gatekeeper | install"
