@@ -8,7 +8,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provider "libvirt" do |libvirt|
     libvirt.cpus = 2
-    libvirt.memory = 4096
+    libvirt.memory = 2048
   end
 
   hosts = ["master", "worker"]
