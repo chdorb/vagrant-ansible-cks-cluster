@@ -1,0 +1,16 @@
+- name: "Metrics Server | helm repository"
+  kubernetes.core.helm_repository:
+    name: metrics-server
+    repo_url: https://kubernetes-sigs.github.io/metrics-server/
+  tags: metrics
+
+- name: "Metrics Server | helm installation"
+  kubernetes.core.helm:
+    name: metrics-server
+    chart_ref: metrics-server/metrics-server
+    release_namespace: kube-system
+    values:
+      args:
+        # see https://github.com/kubernetes/kubeadm/issues/1223
+        - --kubelet-insecure-tls
+  tags: metrics

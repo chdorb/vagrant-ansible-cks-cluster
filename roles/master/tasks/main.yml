@@ -75,6 +75,11 @@
       - etcd-{{ etcdctl.version }}-linux-amd64/etcdctl
   tags: etcd
 
+- name: "Metrics Server | install"
+  ansible.builtin.include_tasks:
+    file: metrics_server.yml
+  tags: metrics
+
 # - name: "OPA/Gatekeeper | install"
 #   ansible.builtin.include_tasks:
 #     file: gatekeeper.yml
