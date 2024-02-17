@@ -1,6 +1,7 @@
 ---
-- hosts: cks-master
-  become: yes
+- name: Master node
+  hosts: cks-master
+  become: true
   roles:
     - role: base
       vars:

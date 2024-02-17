@@ -29,4 +29,3 @@
     state: present
     definition: "{{ lookup('file', 'opa_repo_constraint.yaml') | from_yaml }}"
   register: constrainttemplate
-

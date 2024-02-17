@@ -1,22 +1,22 @@
 # NOTE: podman is available in official ubuntu repo since 22.04 | TODO: install from ubuntu repo when upgrading to 22.04
-- name: "podman | libcontainers repo key"
+- name: "Podman | libcontainers repo key"
   ansible.builtin.apt_key:
     url: https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_20.04/Release.key
     state: present
   tags: packages, apt, podman
 
-- name: "podman | libcontainers repo"
+- name: "Podman | libcontainers repo"
   ansible.builtin.apt_repository:
     repo: deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
     filename: /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
     state: present
   tags: packages, apt, podman
 
-- name: "podman | podman packages"
+- name: "Podman | podman packages"
   ansible.builtin.apt:
     name:
-    - podman
+      - podman
     install_recommends: false
     state: present
-    update_cache: yes
+    update_cache: true
   tags: packages, apt, podman

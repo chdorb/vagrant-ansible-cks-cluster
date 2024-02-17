@@ -1,10 +1,10 @@
-- name: worker | check kubelet conf file
+- name: Worker | check kubelet conf file
   ansible.builtin.stat:
     path: /etc/kubernetes/kubelet.conf
   register: worker_join
   tags: join
 
-- name: worker | wait for master
+- name: Worker | wait for master
   ansible.builtin.wait_for:
     host: cks-master
     port: 6443
@@ -12,15 +12,17 @@
   when: not worker_join.stat.exists
   tags: join
 
-- name: worker | register join command on master
+- name: Worker | register join command on master
   ansible.builtin.command: |
     kubeadm token create --print-join-command --ttl 0
   delegate_to: cks-master
   register: join_command
   when: not worker_join.stat.exists
+  changed_when: false
   tags: join
 
-- name: worker | join cluster
+- name: Worker | join cluster
   ansible.builtin.command: "{{ join_command.stdout }}"
   when: not worker_join.stat.exists
+  changed_when: not worker_join.stat.exists
   tags: join

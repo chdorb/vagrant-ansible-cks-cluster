@@ -1,20 +1,20 @@
-- name: "setup ansible | apt packages"
+- name: "Setup ansible | apt packages"
   ansible.builtin.apt:
     name:
-    - python3-pip
-    update_cache: yes
+      - python3-pip
+    update_cache: true
   tags: packages, apt
 
 ## For idempotency
-- name: "setup ansible | check if python3-kubernetes is installed"
+- name: "Setup ansible | check if python3-kubernetes is installed"
   ansible.builtin.command: |
     pip3 list --format columns | grep kubernetes
   changed_when: false
-  ignore_errors: yes
+  ignore_errors: true
   register: python_kubernetes_installed
   tags: packages, pip
 
-- name: "setup ansible | pip packages"
+- name: "Setup ansible | pip packages"
   # python3-kubernetes v7.0.0 in ubuntu 20.04 outdated use pip instead
   ansible.builtin.pip:
     name: kubernetes
@@ -23,13 +23,13 @@
   tags: packages, pip
 
 # For idempotency, check a file to see if kubeadm already init
-- name: "init k8s | check if needed"
+- name: "Kubernetes | check if needed"
   ansible.builtin.stat:
     path: /etc/kubernetes/scheduler.conf
   register: kubeadm_file
   tags: kubeadm
 
-- name: "init k8s | kubeadm init"
+- name: "Kubernetes | kubeadm init"
   ansible.builtin.command:
     kubeadm init \
     --kubernetes-version={{ kubernetes.version }} \
@@ -37,20 +37,22 @@
     --skip-token-print \
     --pod-network-cidr 192.168.0.0/16
   when: not kubeadm_file.stat.exists
+  changed_when: not kubeadm_file.stat.exists
   tags: kubeadm
 
-- name: "init k8s | user .kube directory"
+- name: "Kubernetes | user .kube directory"
   ansible.builtin.file:
     path: ~/.kube
+    mode: "0755"
     state: directory
   tags: kubeadm
 
-- name: "init k8s | copy kubeconfig"
+- name: "Kubernetes | copy kubeconfig"
   ansible.builtin.copy:
     src: /etc/kubernetes/admin.conf
     dest: ~/.kube/config
     mode: "0600"
-    remote_src: yes
+    remote_src: true
   tags: kubeadm
 
 - name: "Helm | install"
@@ -63,16 +65,16 @@
     file: cilium_cni.yml
   tags: cilium, cni
 
-- name: "etcdctl"
+- name: "Etcdctl"
   ansible.builtin.unarchive:
     src: "https://github.com/etcd-io/etcd/releases/download/{{ etcdctl.version }}/etcd-{{ etcdctl.version }}-linux-amd64.tar.gz"
     dest: /usr/bin/
-    remote_src: yes
+    remote_src: true
     extra_opts:
-    - --strip-components=1
-    - etcd-{{ etcdctl.version }}-linux-amd64/etcdctl
+      - --strip-components=1
+      - etcd-{{ etcdctl.version }}-linux-amd64/etcdctl
   tags: etcd
 
-#- name: "OPA/Gatekeeper | install"
-#  ansible.builtin.include_tasks:
-#    file: gatekeeper.yml
+# - name: "OPA/Gatekeeper | install"
+#   ansible.builtin.include_tasks:
+#     file: gatekeeper.yml

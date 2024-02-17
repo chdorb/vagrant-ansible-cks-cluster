@@ -1,16 +1,17 @@
-- name: "setup terminal | packages"
+- name: "Setup terminal | packages"
   ansible.builtin.apt:
     name:
-    - bash-completion
-    - binutils
-    update_cache: yes
+      - bash-completion
+      - binutils
+    update_cache: true
   tags: packages, apt
 
-- name: "setup terminal | vim configuration"
+- name: "Setup terminal | vim configuration"
   ansible.builtin.blockinfile:
     marker: '" {mark} ANSIBLE MANAGED BLOCK'
     path: ~/.vimrc
-    create: yes
+    mode: "0644"
+    create: true
     block: |
       colorscheme ron
       set tabstop=2
@@ -18,9 +19,10 @@
       set expandtab
       set autoindent
 
-- name: "setup terminal | bash configuration"
+- name: "Setup terminal | bash configuration"
   ansible.builtin.blockinfile:
     path: ~/.bashrc
+    mode: "0644"
     block: |
       source <(kubectl completion bash)
       alias k=kubectl
@@ -28,40 +30,42 @@
       complete -F __start_kubectl k
   tags: bash
 
-- name: "setup terminal | bash configuration"
+- name: "Setup terminal | bash configuration"
   ansible.builtin.replace:
     path: ~/.bashrc
     regexp: '^#(force_color_prompt=yes)$'
     replace: '\1'
   tags: bash
 
-- name: "tools | include exam additionnal tools"
+- name: "Tools | include exam additionnal tools"
   ansible.builtin.include_tasks:
     file: additionnal_tools.yml
 
-- name: "disable swap | disable swap"
+- name: "Disable swap | disable swap"
   ansible.builtin.command: swapoff -a
   when: ansible_swaptotal_mb > 0
+  changed_when: ansible_swaptotal_mb > 0
   tags: swap
 
-- name: "disable swap | comment swap partition in fstab"
+- name: "Disable swap | comment swap partition in fstab"
   ansible.posix.mount:
     path: none
     fstype: swap
     state: absent
   tags: swap
 
-- name: "apt | keyrings directory"
+- name: "Apt | keyrings directory"
   ansible.builtin.file:
     path: /etc/apt/keyrings
+    mode: "0755"
     state: directory
   tags: packages, apt
 
-- name: "podman | install and configure podman"
+- name: "Podman | install and configure podman"
   ansible.builtin.include_tasks:
     file: podman.yml
 
-- name: "packages | kubernetes repo"
+- name: "Packages | kubernetes repo"
   ansible.builtin.deb822_repository:
     name: kubernetes
     types: [deb]
@@ -72,57 +76,58 @@
     enabled: true
   tags: packages, apt
 
-- name: "packages | kubernetes packages"
+- name: "Packages | kubernetes packages"
   ansible.builtin.apt:
     name:
-    - "kubelet={{ kubernetes.version }}-1.1"
-    - "kubeadm={{ kubernetes.version }}-1.1"
-    - "kubectl={{ kubernetes.version }}-1.1"
-    - kubernetes-cni
+      - "kubelet={{ kubernetes.version }}-1.1"
+      - "kubeadm={{ kubernetes.version }}-1.1"
+      - "kubectl={{ kubernetes.version }}-1.1"
+      - kubernetes-cni
     state: present
-    update_cache: yes
+    update_cache: true
+    allow_change_held_packages: true
   tags: packages, apt
 
-- name: "packages | hold kubernetes packages"
+- name: "Packages | hold kubernetes packages"
   ansible.builtin.dpkg_selections:
     name: "{{ item }}"
     selection: hold
   with_items:
-  - kubelet
-  - kubectl
-  - kubeadm
-  - kubernetes-cni
+    - kubelet
+    - kubectl
+    - kubeadm
+    - kubernetes-cni
   tags: packages, apt
 
-- name: "gvisor | install and configure gvisor"
+- name: "GVisor | install and configure gvisor"
   ansible.builtin.include_tasks:
     file: gvisor.yml
   when: gvisor.enabled
 
-- name: "containerd | install and configure containerd"
+- name: "Containerd | install and configure containerd"
   ansible.builtin.include_tasks:
     file: containerd.yml
 
   # TODO: use handlers ?
-- name: "services | kubelet enabled and started"
+- name: "Services | kubelet enabled and started"
   ansible.builtin.systemd:
     name: kubelet
     state: started
-    daemon_reload: yes
-    enabled: yes
+    daemon_reload: true
+    enabled: true
   tags: kubelet
 
-- name: "course | git clone cks course repository"
+- name: "Course | git clone cks course repository"
   ansible.builtin.git:
     repo: https://github.com/killer-sh/cks-course-environment.git
     dest: /root/cks-course-environment
 
-- name: "falco | install and run falco"
+- name: "Falco | install and run falco"
   ansible.builtin.include_tasks:
     file: falco.yml
   when: falco.enabled
 
-- name: "kube-bench | install kube-bench"
+- name: "Kube-bench | install kube-bench"
   ansible.builtin.include_tasks:
     file: kube-bench.yml
   when: kube_bench.enabled
