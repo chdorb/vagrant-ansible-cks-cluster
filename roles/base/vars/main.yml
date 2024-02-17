@@ -1,5 +1,5 @@
 kubernetes:
-  version: "1.28.4"
+  version: "1.29.1"
 etcdctl:
   version: "v3.5.9"
 gvisor:
