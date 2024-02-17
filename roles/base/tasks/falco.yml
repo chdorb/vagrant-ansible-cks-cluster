@@ -1,49 +1,56 @@
 # https://falco.org/docs/install-operate/installation/#installation-details
-- name: "falco | falco apt repo key"
+- name: "Falco | falco apt repo key"
   ansible.builtin.apt_key:
     url: https://falco.org/repo/falcosecurity-packages.asc
     state: present
   tags: packages, apt, falco
 
-- name: "falco | falco apt repo"
+- name: "Falco | falco apt repo"
   ansible.builtin.apt_repository:
     repo: deb [arch=amd64] https://download.falco.org/packages/deb stable main
     filename: falco
-    update_cache: yes
+    update_cache: true
     state: present
   tags: packages, apt, falco
 
-- name: "falco | prerequisite packages"
+- name: "Falco | prerequisite packages"
   ansible.builtin.apt:
     name:
-    - dkms
-    - make
-    - linux-headers-{{ ansible_kernel }}
+      - dkms
+      - make
+      - linux-headers-{{ ansible_kernel }}
     state: present
-    update_cache: yes
+    update_cache: true
   tags: packages, apt, falco
 
-- name: "falco | falco package"
+- name: "Falco | falco package"
   ansible.builtin.apt:
     name: falco
     state: present
-    update_cache: yes
+    update_cache: true
   tags: packages, apt, falco
 
-- name: "falco | check if kernel module installed"
-  stat:
+- name: "Falco | check if kernel module installed"
+  ansible.builtin.stat:
     path: /lib/modules/{{ ansible_kernel }}/updates/dkms/falco.ko
   register: falco_module_file
   tags: falco, postinstall
 
-- name: "falco | compile kernel module"
-  ansible.builtin.shell: falco-driver-loader --compile
+- name: "Falco | driver kernel module"
+  ansible.builtin.command: falcoctl driver config --type ebpf
+  changed_when: false
   when: not falco_module_file.stat.exists
   tags: falco, postinstall
 
-- name: "falco | falco service"
+- name: "Falco | compile kernel module"
+  ansible.builtin.command: falcoctl driver install
+  changed_when: false
+  when: not falco_module_file.stat.exists
+  tags: falco, postinstall
+
+- name: "Falco | falco service"
   ansible.builtin.systemd:
-    name: falco-kmod
+    name: falco-bpf
     state: started
-    enabled: yes
+    enabled: true
   tags: falco, postinstall, service

@@ -11,4 +11,7 @@
     name: cilium
     chart_ref: cilium/cilium
     release_namespace: kube-system
+    values:
+      cni:
+        exclusive: false # prevent shoot podman cni conf
   tags: cni, cilium

@@ -1,4 +1,4 @@
 falco:
   enabled: true
-kube-bench:
+kube_bench:
   enabled: false

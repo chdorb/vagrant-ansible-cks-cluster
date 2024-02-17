@@ -1,6 +1,7 @@
 ---
-- hosts: cks-worker
-  become: yes
+- name: Worker nodes
+  hosts: cks-worker
+  become: true
   roles:
     - role: base
       vars:
