@@ -12,6 +12,11 @@
     chart_ref: cilium/cilium
     release_namespace: kube-system
     values:
+      bpf:
+        masquerade: true
       cni:
         exclusive: false # prevent shoot podman cni conf
+      k8sServiceHost: "{{ ansible_default_ipv4.address }}"
+      k8sServicePort: 6443
+      kubeProxyReplacement: strict
   tags: cni, cilium
