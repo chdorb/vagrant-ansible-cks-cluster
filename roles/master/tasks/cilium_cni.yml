@@ -17,6 +17,9 @@
       cni:
         exclusive: false # prevent shoot podman cni conf
       k8sServiceHost: "{{ ansible_default_ipv4.address }}"
-      k8sServicePort: 6443
+      k8sServicePort: 6443 # the default port
       kubeProxyReplacement: strict
   tags: cni, cilium
+
+# TODO: cilium cli
+# https://docs.cilium.io/en/stable/gettingstarted/k8s-install-default/#install-the-cilium-cli

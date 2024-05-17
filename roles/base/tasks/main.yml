@@ -99,6 +99,9 @@
     - kubernetes-cni
   tags: packages, apt
 
+# TODO: kubelet configuration resolvConf: /run/systemd/resolve/stub-resolv.conf to preserve too many nameservers
+# "Nameserver limits exceeded" err="Nameserver limits were exceeded, some nameservers have been omitted, the applied nameserver line is: 4.2.2.1 4.2.2.2 208.67.220.220"
+
 - name: "GVisor | install and configure gvisor"
   ansible.builtin.include_tasks:
     file: gvisor.yml

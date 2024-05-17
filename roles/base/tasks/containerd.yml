@@ -73,6 +73,9 @@
   notify: Restart containerd
   tags: containerd, crictl
 
+# TODO deprecated: setup containerRuntimeEndpoint in /var/lib/kubelet/config.yaml instead
+# Flag --container-runtime-endpoint has been deprecated, This parameter should be set via the config file specified by the Kubelet's --config flag. See https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/ for more information.
+# rm /etc/default/kubernetes and investigate /var/lib/kubelet/kubeadm-flags.env from kubeadm ?
 - name: "Containerd configuration | kubelet containerd runtime"
   ansible.builtin.lineinfile:
     path: /etc/default/kubelet
