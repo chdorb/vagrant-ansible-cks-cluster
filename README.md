@@ -11,7 +11,7 @@ Works fine at this time (last commit date) on my two laptops with distro package
 
 Fedora
 
-* Fedora 39
+* Fedora 40
 * Vagrant 2.3.4
 * vagrant-libvirt plugin 0.11.2
 * Ansible 2.16
