@@ -50,6 +50,13 @@
 
 - name: "Falco | falco service"
   ansible.builtin.systemd:
+    name: falco-kmod
+    state: stopped
+    enabled: false
+  tags: falco, postinstall, service
+
+- name: "Falco | falco service"
+  ansible.builtin.systemd:
     name: falco-bpf
     state: started
     enabled: true
