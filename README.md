@@ -20,10 +20,17 @@ Archlinux
 
 * Archlinux
 * Vagrant 2.3.3
-* vagrant-libvirt plugin 0.11.1 (not archlinux packaged, `vagrant plugin install`
+* vagrant-libvirt plugin 0.11.1 (not archlinux packaged, `vagrant plugin install`)
 * Ansible 2.14
 
-There are some additionall collection to install for Ansible
+Ubuntu
+
+* Ubuntu 24.04
+* Vagrant 2.4.3
+* vagrant-libvirt plugin 0.12.2
+* Ansible 2.16.3
+
+There are some additional collections to install for Ansible
 
 ```sh
 ansible-galaxy collection install community.general ansible.posix kubernetes.core
